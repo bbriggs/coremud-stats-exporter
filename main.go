@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"log"
 	"time"
+	"log"
 
+	"github.com/sirupsen/logrus"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -73,8 +74,12 @@ func fetchMarketData() (Market, error) {
 }
 
 func main() {
+	logrus.SetFormatter(&logrus.JSONFormatter{})
+	logrus.SetLevel(logrus.InfoLevel)
+	logrus.Info("Starting up")
     http.Handle("/metrics", promhttp.Handler())
-
+	logrus.Info("Metrics endpoint registered")
+	logrus.Info("Fetching market data")
     go func() {
         ticker := time.NewTicker(60 * time.Second)
         defer ticker.Stop()
@@ -82,12 +87,12 @@ func main() {
         for {
             _, err := fetchMarketData()
             if err != nil {
-                log.Printf("Failed to fetch market data: %v", err)
+                logrus.Error(err)
             }
 
             <-ticker.C
         }
     }()
-
+	logrus.Info("Starting server")
     log.Fatal(http.ListenAndServe(":8080", nil))
 }
