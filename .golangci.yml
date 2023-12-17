@@ -25,6 +25,3 @@ linters:
     - dupl
     - goconst
     - misspell
-
-run:
-  deadline: 1m
