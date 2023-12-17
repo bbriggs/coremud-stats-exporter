@@ -26,10 +26,17 @@ func main() {
 				logrus.Error(err)
 			}
 
-			_, err = fetchArmorShops()
+			var shops *ArmorShops
+			shops, err = fetchArmorShops()
 			if err != nil {
 				logrus.Error(err)
 			}
+
+			_, err = fetchArmorShopInventory(shops)
+			if err != nil {
+				logrus.Error(err)
+			}
+
 			<-ticker.C
 		}
 	}()
