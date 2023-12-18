@@ -13,6 +13,10 @@ func main() {
 	logrus.SetFormatter(&logrus.JSONFormatter{})
 	logrus.SetLevel(logrus.InfoLevel)
 	logrus.Info("Starting up")
+
+	http.Handle("/healthz", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
 	http.Handle("/metrics", promhttp.Handler())
 	logrus.Info("Metrics endpoint registered")
 	logrus.Info("Fetching market data")
