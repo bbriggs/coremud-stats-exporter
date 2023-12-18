@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 )
@@ -14,10 +16,26 @@ func main() {
 	logrus.SetLevel(logrus.InfoLevel)
 	logrus.Info("Starting up")
 
-	http.Handle("/metrics", loggingMiddleware(promhttp.Handler()))
-	http.Handle("/", loggingMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	httpRequestsCounter := promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "http_requests_total",
+			Help: "Number of HTTP requests",
+		},
+		[]string{"path"},
+	)
+
+	// Wrap a handler with logging and counter middleware
+	wrapHandlerWithLoggingAndCounter := func(path string, handler http.Handler) http.Handler {
+		return promhttp.InstrumentHandlerCounter(httpRequestsCounter.MustCurryWith(prometheus.Labels{"path": path}),
+			loggingMiddleware(handler),
+		)
+	}
+
+	http.Handle("/metrics", wrapHandlerWithLoggingAndCounter("/metrics", promhttp.Handler()))
+	http.Handle("/", wrapHandlerWithLoggingAndCounter("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("CoreMud Metrics Exporter\n"))
 	})))
+
 	logrus.Info("Metrics endpoint registered")
 	logrus.Info("Fetching market data")
 	go func() {
