@@ -13,7 +13,11 @@ func main() {
 	logrus.SetFormatter(&logrus.JSONFormatter{})
 	logrus.SetLevel(logrus.InfoLevel)
 	logrus.Info("Starting up")
-	http.Handle("/metrics", promhttp.Handler())
+
+	http.Handle("/metrics", loggingMiddleware(promhttp.Handler()))
+	http.Handle("/", loggingMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("CoreMud Metrics Exporter\n"))
+	})))
 	logrus.Info("Metrics endpoint registered")
 	logrus.Info("Fetching market data")
 	go func() {
@@ -42,4 +46,20 @@ func main() {
 	}()
 	logrus.Info("Starting server")
 	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+
+		next.ServeHTTP(w, r)
+
+		logrus.WithFields(logrus.Fields{
+			"clientIP":  r.RemoteAddr,
+			"method":    r.Method,
+			"uri":       r.RequestURI,
+			"userAgent": r.UserAgent(),
+			"time":      time.Since(start),
+		}).Info("Received request")
+	})
 }
