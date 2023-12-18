@@ -16,6 +16,10 @@ primary_region = "atl"
   min_machines_running = 0
   processes = ["app"]
 
+[metrics]
+  port = 9090
+  path = "/metrics"
+
 [[vm]]
   cpu_kind = "shared"
   cpus = 1
