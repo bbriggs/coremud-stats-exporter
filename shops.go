@@ -21,7 +21,7 @@ var (
 
 var (
 	shopInventory = promauto.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "shop_inventory",
+		Name: "armor_shop_inventory",
 		Help: "The current inventory of each shop",
 	}, []string{"shop"})
 )

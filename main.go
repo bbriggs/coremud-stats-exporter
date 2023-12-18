@@ -16,25 +16,10 @@ func main() {
 	logrus.SetLevel(logrus.InfoLevel)
 	logrus.Info("Starting up")
 
-	httpRequestsCounter := promauto.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "http_requests_total",
-			Help: "Number of HTTP requests",
-		},
-		[]string{"path"},
-	)
-
-	// Wrap a handler with logging and counter middleware
-	wrapHandlerWithLoggingAndCounter := func(path string, handler http.Handler) http.Handler {
-		return promhttp.InstrumentHandlerCounter(httpRequestsCounter.MustCurryWith(prometheus.Labels{"path": path}),
-			loggingMiddleware(handler),
-		)
-	}
-
-	http.Handle("/metrics", wrapHandlerWithLoggingAndCounter("/metrics", promhttp.Handler()))
-	http.Handle("/", wrapHandlerWithLoggingAndCounter("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("CoreMud Metrics Exporter\n"))
-	})))
+	http.Handle("/healthz", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	http.Handle("/metrics", promhttp.Handler())
 
 	logrus.Info("Metrics endpoint registered")
 	logrus.Info("Fetching market data")
