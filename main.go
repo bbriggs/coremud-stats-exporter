@@ -14,12 +14,30 @@ func main() {
 	logrus.SetLevel(logrus.InfoLevel)
 	logrus.Info("Starting up")
 
-	http.Handle("/healthz", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// Create a new ServeMux for the healthz server
+	healthMux := http.NewServeMux()
+	healthMux.Handle("/healthz", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"ok"}`))
 	}))
-	http.Handle("/metrics", promhttp.Handler())
 
-	logrus.Info("Metrics endpoint registered")
+	// Start the healthz server on port 8080
+	go func() {
+		logrus.Info("Starting healthz server on port 8080")
+		log.Fatal(http.ListenAndServe(":8080", healthMux))
+	}()
+
+	// Create a new ServeMux for the metrics server
+	metricsMux := http.NewServeMux()
+	metricsMux.Handle("/metrics", promhttp.Handler())
+
+	// Start the metrics server on port 9090
+	go func() {
+		logrus.Info("Starting metrics server on port 9090")
+		log.Fatal(http.ListenAndServe(":9090", metricsMux))
+	}()
+
 	logrus.Info("Fetching market data")
 	go func() {
 		ticker := time.NewTicker(60 * time.Second)
@@ -45,8 +63,9 @@ func main() {
 			<-ticker.C
 		}
 	}()
-	logrus.Info("Starting server")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+
+	// Wait indefinitely
+	select {}
 }
 
 func loggingMiddleware(next http.Handler) http.Handler {
