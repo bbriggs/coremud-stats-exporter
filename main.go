@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 )
@@ -18,6 +20,7 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 	}))
 	http.Handle("/metrics", promhttp.Handler())
+
 	logrus.Info("Metrics endpoint registered")
 	logrus.Info("Fetching market data")
 	go func() {
@@ -46,4 +49,20 @@ func main() {
 	}()
 	logrus.Info("Starting server")
 	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+
+		next.ServeHTTP(w, r)
+
+		logrus.WithFields(logrus.Fields{
+			"clientIP":  r.RemoteAddr,
+			"method":    r.Method,
+			"uri":       r.RequestURI,
+			"userAgent": r.UserAgent(),
+			"time":      time.Since(start),
+		}).Info("Received request")
+	})
 }
