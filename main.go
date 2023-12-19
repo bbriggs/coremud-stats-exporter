@@ -67,19 +67,3 @@ func main() {
 	// Wait indefinitely
 	select {}
 }
-
-func loggingMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-
-		next.ServeHTTP(w, r)
-
-		logrus.WithFields(logrus.Fields{
-			"clientIP":  r.RemoteAddr,
-			"method":    r.Method,
-			"uri":       r.RequestURI,
-			"userAgent": r.UserAgent(),
-			"time":      time.Since(start),
-		}).Info("Received request")
-	})
-}

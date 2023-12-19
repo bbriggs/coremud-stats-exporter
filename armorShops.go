@@ -84,7 +84,7 @@ func fetchArmorShopInventory(armorShops *ArmorShops) ([]ArmorShop, error) {
 	var armorShopInventories []ArmorShop
 
 	for _, shop := range armorShops.Shops {
-		resp, err := http.Get(fmt.Sprintf("https://coremud.org/api/shop/armour/%s", shop))
+		resp, err := http.Get(fmt.Sprintf("https://coremud.org/api/shop/armour/%s", shop)) // this is vulernable to injection attacks via player shop names lol
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch inventory for shop %s: %w", shop, err)
 		}
