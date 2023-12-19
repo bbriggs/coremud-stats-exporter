@@ -49,19 +49,6 @@ func main() {
 				logrus.Error(err)
 			}
 
-			/*
-				var shops *ArmorShops
-				shops, err = fetchArmorShops()
-				if err != nil {
-					logrus.Error(err)
-				}
-
-				_, err = fetchArmorShopInventory(shops)
-				if err != nil {
-					logrus.Error(err)
-				}
-			*/
-
 			var shopsTypes = []ShopType{
 				ArmourShopType,
 				LizonShopType,
