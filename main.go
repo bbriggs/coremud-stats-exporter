@@ -49,17 +49,49 @@ func main() {
 				logrus.Error(err)
 			}
 
-			var shops *ArmorShops
-			shops, err = fetchArmorShops()
-			if err != nil {
-				logrus.Error(err)
+			/*
+				var shops *ArmorShops
+				shops, err = fetchArmorShops()
+				if err != nil {
+					logrus.Error(err)
+				}
+
+				_, err = fetchArmorShopInventory(shops)
+				if err != nil {
+					logrus.Error(err)
+				}
+			*/
+
+			var shopsTypes = []ShopType{
+				ArmourShopType,
+				LizonShopType,
+				RefineryShopType,
+				PubShopType,
+				ClinicShopType,
+				RetailShopType,
+				FactoryShopType,
 			}
 
-			_, err = fetchArmorShopInventory(shops)
-			if err != nil {
-				logrus.Error(err)
-			}
+			for _, shopType := range shopsTypes {
+				logrus.Infof("Fetching %s shops", shopType)
+				shops, err := fetchShopsByType(shopType)
+				if err != nil {
+					logrus.Error(err)
+				}
 
+				for _, shop := range shops.Shops {
+					logrus.Infof("Fetching %s shop: %s", shopType, shop)
+					_, err = fetchShop(shopType, shop)
+					if err != nil {
+						logrus.Error(err)
+					}
+				}
+
+				if err != nil {
+					logrus.Error(err)
+				}
+
+			}
 			<-ticker.C
 		}
 	}()
