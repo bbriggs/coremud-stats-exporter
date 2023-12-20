@@ -194,7 +194,12 @@ func (collector *ShopCollector) Collect(ch chan<- prometheus.Metric) {
 				continue
 			}
 
-			shop, err := fetchShop(shopType, shopName)
+			var (
+				shop *Shop
+				err  error
+			)
+
+			shop, err = fetchShop(shopType, shopName)
 			if err != nil {
 				logrus.Error(err)
 				continue // skip this shop if we can't fetch it or unmarshal it
