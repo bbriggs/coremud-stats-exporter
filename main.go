@@ -5,11 +5,15 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 )
 
 func main() {
+	shopCollector := NewShopCollector()
+	prometheus.MustRegister(shopCollector)
+
 	logrus.SetFormatter(&logrus.JSONFormatter{})
 	logrus.SetLevel(logrus.InfoLevel)
 	logrus.Info("Starting up")
@@ -48,18 +52,6 @@ func main() {
 			if err != nil {
 				logrus.Error(err)
 			}
-
-			var shops *ArmorShops
-			shops, err = fetchArmorShops()
-			if err != nil {
-				logrus.Error(err)
-			}
-
-			_, err = fetchArmorShopInventory(shops)
-			if err != nil {
-				logrus.Error(err)
-			}
-
 			<-ticker.C
 		}
 	}()
