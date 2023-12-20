@@ -5,11 +5,15 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 )
 
 func main() {
+	shopCollector := NewShopCollector()
+	prometheus.MustRegister(shopCollector)
+
 	logrus.SetFormatter(&logrus.JSONFormatter{})
 	logrus.SetLevel(logrus.InfoLevel)
 	logrus.Info("Starting up")
@@ -47,37 +51,6 @@ func main() {
 			_, err := fetchMarketData()
 			if err != nil {
 				logrus.Error(err)
-			}
-
-			var shopsTypes = []ShopType{
-				ArmourShopType,
-				LizonShopType,
-				RefineryShopType,
-				PubShopType,
-				ClinicShopType,
-				RetailShopType,
-				FactoryShopType,
-			}
-
-			for _, shopType := range shopsTypes {
-				logrus.Infof("Fetching %s shops", shopType)
-				shops, err := fetchShopsByType(shopType)
-				if err != nil {
-					logrus.Error(err)
-				}
-
-				for _, shop := range shops.Shops {
-					logrus.Infof("Fetching %s shop: %s", shopType, shop)
-					_, err = fetchShop(shopType, shop)
-					if err != nil {
-						logrus.Error(err)
-					}
-				}
-
-				if err != nil {
-					logrus.Error(err)
-				}
-
 			}
 			<-ticker.C
 		}
