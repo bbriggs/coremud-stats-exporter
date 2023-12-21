@@ -9,6 +9,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
+const (
+	marketDataURL = "http://coremud.org/api/stocks"
+)
+
 var (
 	priceGauge = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -39,7 +43,7 @@ type Market struct {
 }
 
 func fetchMarketData() (Market, error) {
-	resp, err := http.Get("http://coremud.org:3995/stocks")
+	resp, err := http.Get(marketDataURL)
 	if err != nil {
 		return Market{}, err
 	}

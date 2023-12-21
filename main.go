@@ -44,7 +44,7 @@ func main() {
 
 	logrus.Info("Fetching market data")
 	go func() {
-		ticker := time.NewTicker(60 * time.Second)
+		ticker := time.NewTicker(60 * time.Minute)
 		defer ticker.Stop()
 
 		for {
