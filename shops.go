@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
@@ -112,6 +113,7 @@ type Expense struct {
 
 type ShopCollector struct {
 	shopMetric *prometheus.Desc
+	lastRun    time.Time
 }
 
 func NewShopCollector() *ShopCollector {
@@ -170,6 +172,13 @@ func (collector *ShopCollector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 func (collector *ShopCollector) Collect(ch chan<- prometheus.Metric) {
+
+	// run no more than once per hour
+	if time.Since(collector.lastRun) < time.Hour {
+		return
+	}
+	collector.lastRun = time.Now()
+
 	var shopsTypes = []ShopType{
 		ArmourShopType,
 		LizonShopType,
@@ -212,11 +221,11 @@ func (collector *ShopCollector) Collect(ch chan<- prometheus.Metric) {
 				shop.Owner,
 				shop.ShopName,
 				shop.MerchantName,
+				shop.ShopType,
 				strconv.Itoa(shop.RepairIncome),
 				strconv.Itoa(shop.Gerks),
 				strconv.Itoa(shop.MaxGerks),
 				strconv.Itoa(shop.TotalIncome),
-				shop.ShopType,
 				strconv.Itoa(shop.MaxLizon),
 				strconv.Itoa(shop.LizonPrice),
 				strconv.Itoa(shop.GerksPrice),
@@ -294,8 +303,8 @@ func fetchShop(shopType ShopType, shopName string) (*Shop, error) {
 		return nil, fmt.Errorf("failed to unmarshal shop: %w", err)
 	}
 
-	// set the shop name since it's not in the json
 	shop.ShopName = shopName
+	shop.ShopType = string(shopType)
 
 	return &shop, nil
 }
